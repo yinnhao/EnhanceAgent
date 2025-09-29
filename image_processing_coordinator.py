@@ -12,14 +12,16 @@ from fastmcp import FastMCP, Client
 # 创建协调器MCP服务器
 mcp = FastMCP("图像处理协调器")
 
-# 服务端点配置
-INTENT_ANALYZER_URL = "http://127.0.0.1:4202/intent-analyzer"
-IMAGE_PROCESSOR_URL = "http://127.0.0.1:4201/image-processor"
-
+# 导入统一配置
+from config import (
+    get_mode, is_http_mode, is_stdout_mode,
+    get_intent_analyzer_source, get_image_processor_source,
+    HTTP_CONFIG
+)
 class ImageProcessingCoordinator:
     def __init__(self):
-        self.intent_client = Client(INTENT_ANALYZER_URL)
-        self.image_client = Client(IMAGE_PROCESSOR_URL)
+        self.intent_client = Client(get_intent_analyzer_source())
+        self.image_client = Client(get_image_processor_source())
     
     @staticmethod
     def _extract_text_from_call_result(result: Any) -> str:
@@ -200,14 +202,17 @@ def load_image_from_file(file_path: str) -> str:
 
 if __name__ == "__main__":
     print("启动图像处理协调器...")
-    print("确保以下服务正在运行：")
-    print("- 意图分析服务器 (端口 4202)")
-    print("- 图像处理服务器 (端口 4201)")
-    
-    mcp.run(
-        transport="http",
-        host="127.0.0.1",
-        port=4204,
-        path="/coordinator", 
-        log_level="info"
-    )
+    print(f"运行模式: {get_mode()}")
+    if is_http_mode():
+        print("确保以下服务正在运行：")
+        print("- 意图分析服务器 (端口 4202)")
+        print("- 图像处理服务器 (端口 4201)")
+        mcp.run(
+            transport="http",
+            host=HTTP_CONFIG["COORDINATOR_HOST"],
+            port=HTTP_CONFIG["COORDINATOR_PORT"],
+            path=HTTP_CONFIG["COORDINATOR_PATH"], 
+        )
+    else:
+        print("使用 stdout 模式，将自动启动下游服务")
+        mcp.run()

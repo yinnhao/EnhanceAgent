@@ -7,6 +7,7 @@ import io
 import os
 from PIL import Image
 from fastmcp import FastMCP
+from config import get_mode
 
 # 创建图像处理MCP服务器
 mcp = FastMCP("图像处理工具服务器")
@@ -114,10 +115,13 @@ def get_image_info(image_base64: str) -> str:
 
 if __name__ == "__main__":
     print("启动图像处理工具服务器...")
-    mcp.run(
-        transport="http",
-        host="127.0.0.1",
-        port=4201,
-        path="/image-processor",
-        log_level="info"
-    )
+    if get_mode() == "http":
+        mcp.run(
+            transport="http",
+            host="127.0.0.1",
+            port=4201,
+            path="/image-processor",
+            log_level="info"
+        )
+    elif get_mode() == "stdout":    
+        mcp.run()

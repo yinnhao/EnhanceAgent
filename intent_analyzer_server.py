@@ -15,6 +15,8 @@ try:
 except Exception:
     get_response = None
 
+from config import get_mode
+
 # 创建意图理解MCP服务器
 mcp = FastMCP("LLM意图理解服务器")
 
@@ -142,10 +144,13 @@ def get_available_tools() -> str:
 
 if __name__ == "__main__":
     print("启动LLM意图理解服务器...")
-    mcp.run(
-        transport="http",
-        host="127.0.0.1", 
-        port=4202,
-        path="/intent-analyzer",
-        log_level="info"
-    )
+    if get_mode() == "http":
+        mcp.run(
+            transport="http",
+            host="127.0.0.1", 
+            port=4202,
+            path="/intent-analyzer",
+            log_level="info"
+        )
+    elif get_mode() == "stdout":
+        mcp.run()

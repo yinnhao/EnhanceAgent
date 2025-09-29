@@ -21,9 +21,7 @@ from typing import Optional
 
 from PIL import Image
 from fastmcp import Client
-
-
-COORDINATOR_URL = "http://127.0.0.1:4204/coordinator"
+from config import get_coordinator_source
 
 
 def read_file_as_base64(file_path: str) -> str:
@@ -80,7 +78,7 @@ def to_json_data(result):
 
 
 async def _call_coordinator(image_b64: str, instruction: str):
-    client = Client(COORDINATOR_URL)
+    client = Client(get_coordinator_source())
     async with client:
         r = await client.call_tool(
             "process_image_with_instruction",
