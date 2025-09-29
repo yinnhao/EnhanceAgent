@@ -1,10 +1,7 @@
 # conda环境
 ```
-# 如果需要本地运行kontext，参考kontext/build_env.sh配置环境
 # 需要安装fastmcp
-# openai=0.28.0
-conda activate kontext
-
+# openai的版本需要是0.28.0
 ```
 
 # 启动mcp服务

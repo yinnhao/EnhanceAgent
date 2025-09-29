@@ -66,31 +66,6 @@ def analyze_intent(user_instruction: str) -> str:
         str: JSON格式的意图分析结果
     """
     try:
-        # 规则优先：最小可用规则解析
-        text = user_instruction.strip().lower()
-        tools = []
-        reasoning = []
-
-        # # 中文/英文关键词映射
-        # grayscale_keywords = ["灰度", "灰色", "黑白", "grayscale", "gray"]
-        # rotate_keywords = ["旋转", "顺时针", "90", "rotate", "clockwise"]
-
-        # if any(k in user_instruction for k in grayscale_keywords):
-        #     tools.append("convert_to_grayscale")
-        #     reasoning.append("检测到灰度相关关键词")
-        # if any(k in user_instruction for k in rotate_keywords):
-        #     tools.append("rotate_clockwise_90")
-        #     reasoning.append("检测到旋转相关关键词")
-
-        # if tools:
-        #     action_type = "single" if len(tools) == 1 else "sequence"
-        #     return json.dumps({
-        #         "action_type": action_type,
-        #         "tools": tools,
-        #         "reasoning": "；".join(reasoning) or "根据规则匹配得到工具序列"
-        #     }, ensure_ascii=False, indent=2)
-
-        # 若规则无匹配且具备LLM，则尝试LLM（可选）
         if get_response is not None:
             messages = [
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -105,13 +80,15 @@ def analyze_intent(user_instruction: str) -> str:
             )
             print("llm response:", response)
             try:
-                cleaned_response = response.strip()
+                # 对llm返回的结果进行清洗：1.移除开头和结尾的空白字符（包括空格、换行符、制表符等）2.移除开头和结尾的```json和```
+                cleaned_response = response.strip() 
                 if cleaned_response.startswith('```json'):
                     cleaned_response = cleaned_response[7:]
                 if cleaned_response.endswith('```'):
                     cleaned_response = cleaned_response[:-3]
                 cleaned_response = cleaned_response.strip()
                 parsed_response = json.loads(cleaned_response)
+                # 判断是否缺少必要字段
                 if not all(key in parsed_response for key in ["action_type", "tools", "reasoning"]):
                     raise ValueError("缺少必要字段")
                 return json.dumps(parsed_response, ensure_ascii=False, indent=2)
