@@ -1,0 +1,1 @@
+python cli_main.py --image ./test_img/test.png --instruction "先灰度化再顺时针旋转90度" --output ./output/test_out.png
