@@ -102,14 +102,8 @@ def process_image(image_path: str, instruction: str, output_path: Optional[str] 
     img_b64 = read_file_as_base64(image_path)
 
     # 调用协调器
-    try:
-        raw_result = asyncio.run(_call_coordinator(img_b64, instruction))
-    except RuntimeError:
-        # 某些环境已存在事件循环
-        import nest_asyncio
-        nest_asyncio.apply()
-        loop = asyncio.get_event_loop()
-        raw_result = loop.run_until_complete(_call_coordinator(img_b64, instruction))
+    raw_result = asyncio.run(_call_coordinator(img_b64, instruction))
+    
 
     data = to_json_data(raw_result)
     if not data.get("success"):

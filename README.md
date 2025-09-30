@@ -68,3 +68,22 @@ IMAGE_EDIT_MODE=http python cli_main.py --image ./test_img/test.png --instructio
 # 临时使用 STDOUT 模式  
 IMAGE_EDIT_MODE=stdout python cli_main.py --image ./test_img/test.png --instruction "先灰度化再顺时针旋转90度"
 ```
+
+## 项目架构
+
+### 核心模块
+- **`config.py`** - 统一配置管理（运行模式、服务端点等）
+- **`prompt.py`** - 统一 Prompt 管理（LLM 提示词、错误消息、UI 文本等）
+- **`cli_main.py`** - 命令行主入口
+- **`chat_ui.py`** - Gradio 可视化界面
+
+### 服务器模块
+- **`image_processor_server.py`** - 图像处理工具服务器
+- **`intent_analyzer_server.py`** - 意图分析服务器
+- **`image_processing_coordinator.py`** - 协调器服务器
+
+### 统一管理优势
+- **配置集中化**：通过 `config.py` 统一管理所有配置
+- **Prompt 集中化**：通过 `prompt.py` 统一管理所有提示词和消息
+- **易于维护**：修改配置或 Prompt 只需在一个地方
+- **标准化**：统一的错误处理和消息格式
