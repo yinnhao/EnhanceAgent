@@ -101,6 +101,16 @@ def get_available_tools() -> str:
                 "name": "get_image_info",
                 "description": "获取图像基本信息（尺寸、格式等）",
                 "keywords": ["信息", "尺寸", "大小", "格式", "info", "size"]
+            },
+            {
+                "name": "denoise_scunet",
+                "description": "使用 SCUNet 进行去噪",
+                "keywords": ["去噪", "降噪", "denoise", "scunet"]
+            },
+            {
+                "name": "super_resolution_bsrgan",
+                "description": "使用 BSRGAN 进行超分辨率",
+                "keywords": ["超分", "超分辨率", "放大", "BSRGAN", "SR", "super-resolution"]
             }
         ]
     }

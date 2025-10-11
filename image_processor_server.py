@@ -113,6 +113,109 @@ def get_image_info(image_base64: str) -> str:
     except Exception as e:
         return f"错误：获取图像信息失败 - {str(e)}"
 
+# --------------- 扩展：去噪与超分（最小改动，依赖 KAIR） ---------------
+
+@mcp.tool()
+def denoise_scunet(image_base64: str, model_name: str = "scunet_color_real_psnr", model_zoo: str = "") -> str:
+    """
+    使用 KAIR 的 SCUNet 模型进行去噪。
+
+    Args:
+        image_base64: base64 输入图像（任意模式，会转换为 RGB）
+        model_name: 模型名（默认 scunet_color_real_psnr），对应 {model_zoo}/{model_name}.pth
+        model_zoo: 模型目录，默认使用 KAIR/model_zoo
+    Returns:
+        base64 输出图像
+    """
+    try:
+        import sys
+        import numpy as np
+        import torch
+        # 动态引入 KAIR
+        kair_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "KAIR"))
+        if kair_root not in sys.path:
+            sys.path.insert(0, kair_root)
+        from models.network_scunet import SCUNet as net
+
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # 加载图像 -> Tensor
+        img = image_from_base64(image_base64).convert('RGB')
+        arr = np.array(img)  # HWC, uint8
+        x = torch.from_numpy(arr).permute(2,0,1).unsqueeze(0).float().div(255.0).to(device)
+
+        # 加载模型
+        model = net(in_nc=3, config=[4,4,4,4,4,4,4], dim=64)
+        weights_root = model_zoo or os.path.join(kair_root, "model_zoo")
+        weight_path = os.path.join(weights_root, f"{model_name}.pth")
+        state = torch.load(weight_path, map_location=device)
+        model.load_state_dict(state, strict=True)
+        model.eval()
+        for p in model.parameters():
+            p.requires_grad = False
+        model = model.to(device)
+
+        with torch.no_grad():
+            y = model(x)
+        y = y.clamp(0,1).cpu().squeeze(0)
+        out = (y.permute(1,2,0).numpy() * 255.0 + 0.5).astype(np.uint8)
+        from PIL import Image as _Image
+        return image_to_base64(_Image.fromarray(out))
+    except Exception as e:
+        return f"错误：SCUNet 去噪失败 - {str(e)}"
+
+
+@mcp.tool()
+def super_resolution_bsrgan(image_base64: str, model_name: str = "BSRGAN", model_zoo: str = "", scale: int = 4) -> str:
+    """
+    使用 KAIR 的 BSRGAN 模型进行超分辨率。
+
+    Args:
+        image_base64: base64 输入图像（任意模式，会转换为 RGB）
+        model_name: 模型名（默认 BSRGAN，若使用 x2 模型可设为 BSRGANx2）
+        model_zoo: 模型目录，默认使用 KAIR/model_zoo
+        scale: 放大倍数（2 或 4），需与权重匹配
+    Returns:
+        base64 输出图像
+    """
+    try:
+        import sys
+        import numpy as np
+        import torch
+        # 动态引入 KAIR
+        kair_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "KAIR"))
+        if kair_root not in sys.path:
+            sys.path.insert(0, kair_root)
+        from models.network_rrdbnet import RRDBNet as net
+
+        # 确定放大倍数
+        sf = 2 if ("x2" in model_name.lower() or scale == 2) else 4
+
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # 加载图像 -> Tensor
+        img = image_from_base64(image_base64).convert('RGB')
+        arr = np.array(img)
+        x = torch.from_numpy(arr).permute(2,0,1).unsqueeze(0).float().div(255.0).to(device)
+
+        # 加载模型
+        model = net(in_nc=3, out_nc=3, nf=64, nb=23, gc=32, sf=sf)
+        weights_root = model_zoo or os.path.join(kair_root, "model_zoo")
+        weight_path = os.path.join(weights_root, f"{model_name}.pth")
+        state = torch.load(weight_path, map_location=device)
+        model.load_state_dict(state, strict=True)
+        model.eval()
+        for p in model.parameters():
+            p.requires_grad = False
+        model = model.to(device)
+
+        with torch.no_grad():
+            y = model(x)
+        y = y.clamp(0,1).cpu().squeeze(0)
+        out = (y.permute(1,2,0).numpy() * 255.0 + 0.5).astype(np.uint8)
+        from PIL import Image as _Image
+        return image_to_base64(_Image.fromarray(out))
+    except Exception as e:
+        return f"错误：BSRGAN 超分失败 - {str(e)}"
+
 if __name__ == "__main__":
     print("启动图像处理工具服务器...")
     if get_mode() == "http":
