@@ -1,0 +1,67 @@
+{
+    "framework": "pytorch",
+
+    "task": "image-colorization",
+
+    "pipeline": {
+        "type": "ddcolor-image-colorization"
+    },
+
+    "model": {
+        "type": "ddcolor"
+    },
+
+    "dataset": {
+        "name": "imagenet-val5k-image",
+        "dataroot_gt": "val5k/",
+        "filename_tmpl": "{}",
+        "scale": 1,
+        "gt_size": 256
+    },
+
+    "train": {
+        "dataloader": {
+            "batch_size_per_gpu": 4,
+            "workers_per_gpu": 4,
+            "shuffle": true
+        },
+        "optimizer": {
+            "type": "AdamW",
+            "lr": 1e-6,
+            "weight_decay": 0.01,
+            "betas": [0.9, 0.99]
+        },
+        "lr_scheduler": {
+            "type": "CosineAnnealingLR",
+            "T_max": 200000,
+            "eta_min": 1e-7
+        },
+        "max_epochs": 2,
+        "hooks": [{
+                "type": "CheckpointHook",
+                "interval": 1
+            },
+            {
+                "type": "TextLoggerHook",
+                "interval": 1
+            },
+            {
+                "type": "IterTimerHook"
+            },
+            {
+                "type": "EvaluationHook",
+                "interval": 1
+            }
+        ]
+    },
+
+    "evaluation": {
+        "dataloader": {
+            "batch_size_per_gpu": 8,
+            "workers_per_gpu": 1,
+            "shuffle": false
+        },
+        "metrics": "image-colorization-metric"
+    }
+
+}
