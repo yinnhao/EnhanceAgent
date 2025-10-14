@@ -113,6 +113,61 @@ def get_image_info(image_base64: str) -> str:
     except Exception as e:
         return f"错误：获取图像信息失败 - {str(e)}"
 
+
+# --------------- 扩展：黑白图像上色（DDColor） ---------------
+
+@mcp.tool()
+def colorize_ddcolor(
+    image_base64: str,
+    model_path: str = "DDColor/modelscope/damo/cv_ddcolor_image-colorization/pytorch_model.pt",
+    input_size: int = 512,
+    model_size: str = "large"
+) -> str:
+    """
+    使用 DDColor 为黑白图像上色。
+
+    Args:
+        image_base64: base64 输入图像
+        model_path: 模型权重路径（默认与仓库中的 infer.py 一致）
+        input_size: 模型输入尺寸（默认 512）
+        model_size: 模型规模（"tiny" 或 "large"，默认 large）
+
+    Returns:
+        base64 输出图像
+    """
+    try:
+        import sys
+        import numpy as np
+        import cv2
+        import torch  # 仅用于确认环境；推理在 DDColor 内部完成
+
+        # 将项目的 DDColor 目录加入路径
+        ddcolor_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "DDColor"))
+        if ddcolor_root not in sys.path:
+            sys.path.insert(0, ddcolor_root)
+
+        # 延迟导入以避免全局依赖
+        from infer import ImageColorizationPipeline
+
+        # PIL -> OpenCV BGR
+        pil_img = image_from_base64(image_base64).convert('RGB')
+        img_rgb = np.array(pil_img)  # RGB uint8
+        img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
+
+        pipeline = ImageColorizationPipeline(
+            model_path=model_path,
+            input_size=input_size,
+            model_size=model_size
+        )
+        out_bgr = pipeline.process(img_bgr)
+
+        # OpenCV BGR -> PIL
+        out_rgb = cv2.cvtColor(out_bgr, cv2.COLOR_BGR2RGB)
+        out_img = Image.fromarray(out_rgb)
+        return image_to_base64(out_img)
+    except Exception as e:
+        return f"错误：DDColor 上色失败 - {str(e)}"
+
 # --------------- 扩展：去噪与超分（最小改动，依赖 KAIR） ---------------
 
 @mcp.tool()

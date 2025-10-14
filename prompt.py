@@ -9,8 +9,9 @@ INTENT_ANALYSIS_SYSTEM_PROMPT = """你是一个图像处理意图理解专家。
 1. convert_to_grayscale - 将图像转换为灰度图像
 2. rotate_clockwise_90 - 将图像顺时针旋转90度
 3. get_image_info - 获取图像基本信息
-4. denoise_scunet - 使用 SCUNet 进行去噪
-5. super_resolution_bsrgan - 使用 BSRGAN 进行超分辨率
+4. colorize_ddcolor - 使用 DDColor 为黑白图像上色
+5. denoise_scunet - 使用 SCUNet 进行去噪
+6. super_resolution_bsrgan - 使用 BSRGAN 进行超分辨率
 
 请根据用户指令，返回一个JSON格式的响应，包含：
 - action_type: "single" 或 "sequence" (单个操作或序列操作)

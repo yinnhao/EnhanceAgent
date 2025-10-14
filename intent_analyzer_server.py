@@ -103,6 +103,11 @@ def get_available_tools() -> str:
                 "keywords": ["信息", "尺寸", "大小", "格式", "info", "size"]
             },
             {
+                "name": "colorize_ddcolor",
+                "description": "使用 DDColor 为黑白图像上色",
+                "keywords": ["上色", "着色", "黑白", "彩色", "colorize", "ddcolor"]
+            },
+            {
                 "name": "denoise_scunet",
                 "description": "使用 SCUNet 进行去噪",
                 "keywords": ["去噪", "降噪", "denoise", "scunet"]
