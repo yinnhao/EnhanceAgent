@@ -113,6 +113,86 @@ def get_image_info(image_base64: str) -> str:
     except Exception as e:
         return f"错误：获取图像信息失败 - {str(e)}"
 
+# --------------- 扩展：Restormer 去雨 / 去运动模糊（调用官方 demo） ---------------
+
+def _run_restormer_task(task: str, image_base64: str) -> str:
+    try:
+        import tempfile
+        import subprocess
+        import shutil
+        import uuid
+        from glob import glob
+        # 准备临时目录
+        work_dir = tempfile.mkdtemp(prefix="restormer_")
+        input_dir = os.path.join(work_dir, "input")
+        output_dir = os.path.join(work_dir, "output")
+        os.makedirs(input_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)
+
+        # 保存输入图像
+        img = image_from_base64(image_base64).convert('RGB')
+        in_name = f"{uuid.uuid4().hex}.png"
+        in_path = os.path.join(input_dir, in_name)
+        img.save(in_path)
+
+        # 切换到 Restormer 目录调用 demo.py
+        restormer_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "Restormer"))
+        cmd = [
+            "python",
+            "demo.py",
+            "--task", task,
+            "--input_dir", input_dir,
+            "--result_dir", output_dir,
+        ]
+        subprocess.check_call(cmd, cwd=restormer_root)
+
+        # 读取结果
+        # 优先同名文件，否则取输出目录里第一个
+        out_path_same = os.path.join(output_dir, in_name)
+        if os.path.exists(out_path_same):
+            out_path = out_path_same
+        else:
+            outs = sorted(glob(os.path.join(output_dir, "*")))
+            if not outs:
+                raise FileNotFoundError("Restormer 未生成输出文件")
+            out_path = outs[0]
+
+        with open(out_path, "rb") as f:
+            data = f.read()
+        b64 = base64.b64encode(data).decode("utf-8")
+        # 清理
+        shutil.rmtree(work_dir, ignore_errors=True)
+        return b64
+    except subprocess.CalledProcessError as e:
+        return f"错误：Restormer 执行失败 - {e}"
+    except Exception as e:
+        return f"错误：Restormer 处理失败 - {str(e)}"
+
+
+@mcp.tool()
+def derain_restormer(image_base64: str) -> str:
+    """
+    使用 Restormer 进行去雨（Deraining）。
+
+    Args:
+        image_base64: base64 输入图像
+    Returns:
+        base64 输出图像
+    """
+    return _run_restormer_task("Deraining", image_base64)
+
+
+@mcp.tool()
+def deblur_motion_restormer(image_base64: str) -> str:
+    """
+    使用 Restormer 进行去运动模糊（Motion_Deblurring）。
+
+    Args:
+        image_base64: base64 输入图像
+    Returns:
+        base64 输出图像
+    """
+    return _run_restormer_task("Motion_Deblurring", image_base64)
 
 # --------------- 扩展：黑白图像上色（DDColor） ---------------
 

@@ -108,6 +108,16 @@ def get_available_tools() -> str:
                 "keywords": ["上色", "着色", "黑白", "彩色", "colorize", "ddcolor"]
             },
             {
+                "name": "derain_restormer",
+                "description": "使用 Restormer 进行去雨",
+                "keywords": ["去雨", "雨", "derain", "restormer"]
+            },
+            {
+                "name": "deblur_motion_restormer",
+                "description": "使用 Restormer 进行去运动模糊",
+                "keywords": ["去模糊", "运动模糊", "去运动模糊", "deblur", "motion", "restormer"]
+            },
+            {
                 "name": "denoise_scunet",
                 "description": "使用 SCUNet 进行去噪",
                 "keywords": ["去噪", "降噪", "denoise", "scunet"]
