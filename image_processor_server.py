@@ -144,7 +144,13 @@ def _run_restormer_task(task: str, image_base64: str) -> str:
             "--input_dir", in_path,  # 传入单个文件路径，符合 demo.py 单图用法
             "--result_dir", output_dir,
         ]
-        subprocess.check_call(cmd, cwd=restormer_root)
+        subprocess.run(
+            cmd,
+            cwd=restormer_root,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            check=True,
+        )
 
         # 严格按 demo.py 输出规则：result_dir/task/<basename>.png
         task_out_dir = os.path.join(output_dir, task)
