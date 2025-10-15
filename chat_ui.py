@@ -21,9 +21,7 @@ import os
 import gradio as gr
 from PIL import Image
 from fastmcp import Client
-
-
-COORDINATOR_URL = "http://127.0.0.1:4204/coordinator"
+from config import get_coordinator_source
 
 
 def image_to_base64_str(image: Image.Image, format: str = "PNG") -> str:
@@ -101,7 +99,7 @@ def process_turn(message: str, chat_history: List, current_image: Optional[Image
         input_b64 = image_to_base64_str(current_image)
 
         async def _call():
-            client = Client(COORDINATOR_URL)
+            client = Client(get_coordinator_source())
             async with client:
                 r = await client.call_tool(
                     "process_image_with_instruction",
@@ -132,7 +130,7 @@ def process_turn(message: str, chat_history: List, current_image: Optional[Image
 def check_status() -> str:
     try:
         async def _call():
-            client = Client(COORDINATOR_URL)
+            client = Client(get_coordinator_source())
             async with client:
                 r = await client.call_tool("get_system_status", {})
                 return r
