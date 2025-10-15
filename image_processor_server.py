@@ -141,21 +141,17 @@ def _run_restormer_task(task: str, image_base64: str) -> str:
             "python",
             "demo.py",
             "--task", task,
-            "--input_dir", input_dir,
+            "--input_dir", in_path,  # 传入单个文件路径，符合 demo.py 单图用法
             "--result_dir", output_dir,
         ]
         subprocess.check_call(cmd, cwd=restormer_root)
 
-        # 读取结果
-        # 优先同名文件，否则取输出目录里第一个
-        out_path_same = os.path.join(output_dir, in_name)
-        if os.path.exists(out_path_same):
-            out_path = out_path_same
-        else:
-            outs = sorted(glob(os.path.join(output_dir, "*")))
-            if not outs:
-                raise FileNotFoundError("Restormer 未生成输出文件")
-            out_path = outs[0]
+        # 严格按 demo.py 输出规则：result_dir/task/<basename>.png
+        task_out_dir = os.path.join(output_dir, task)
+        base = os.path.splitext(in_name)[0]
+        out_path = os.path.join(task_out_dir, base + ".png")
+        if not os.path.exists(out_path):
+            raise FileNotFoundError(f"未找到预期输出文件: {out_path}")
 
         with open(out_path, "rb") as f:
             data = f.read()
