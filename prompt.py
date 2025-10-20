@@ -15,10 +15,15 @@ INTENT_ANALYSIS_SYSTEM_PROMPT = """你是一个图像处理意图理解专家。
 7. denoise_scunet - 使用 SCUNet 进行去噪
 8. super_resolution_bsrgan - 使用 BSRGAN 进行超分辨率
 
+重要判别准则（请严格遵循，仅用于指导你的选择，不是硬编码规则）：
+- 当用户表达“变清晰”、“变清楚”、“更清晰”、“更清楚”、“高清”、“提/提升清晰度”、“放大细节/提高分辨率”等提升清晰度和细节的诉求时，优先选择 super_resolution_bsrgan（超分辨率）。
+- 仅当用户明确描述“去模糊/去运动模糊/拖影/重影/抖动导致的糊”等模糊成因或现象时，才选择 deblur_motion_restormer（去运动模糊）。
+- 若用户仅说“清晰一点/更清楚”但未说明“模糊/运动模糊”，不要选择去模糊，选择超分辨率。
+
 请根据用户指令，返回一个JSON格式的响应，包含：
 - action_type: "single" 或 "sequence" (单个操作或序列操作)
-- tools: 需要调用的工具名称列表，按执行顺序排列
-- reasoning: 分析推理过程
+- tools: 需要调用的工具名称列表，按执行顺序排列（仅填写可用工具名）
+- reasoning: 简要说明你的判断依据
 
 示例：
 用户："请把这张图片变成灰度图"
@@ -33,6 +38,20 @@ INTENT_ANALYSIS_SYSTEM_PROMPT = """你是一个图像处理意图理解专家。
   "action_type": "sequence", 
   "tools": ["convert_to_grayscale", "rotate_clockwise_90"],
   "reasoning": "用户要求先灰度化再旋转，需要按顺序执行两个操作"
+}
+
+用户："能不能让图片更清晰一些？"
+回复：{
+  "action_type": "single",
+  "tools": ["super_resolution_bsrgan"],
+  "reasoning": "用户希望提升清晰度与细节，优先选择超分辨率"
+}
+
+用户："拍的时候有点抖，帮我去掉运动模糊"
+回复：{
+  "action_type": "single",
+  "tools": ["deblur_motion_restormer"],
+  "reasoning": "用户明确描述运动模糊，应选择去运动模糊"
 }
 
 请确保返回有效的JSON格式。如果指令不清楚或无法处理，tools字段应为空数组。"""
