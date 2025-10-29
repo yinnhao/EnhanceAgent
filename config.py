@@ -24,6 +24,21 @@ STDOUT_CONFIG = {
     "COORDINATOR_SCRIPT": "./image_processing_coordinator.py"
 }
 
+# 模型预加载开关（默认关闭）。设置 IMAGE_EDIT_PRELOAD_MODELS=true 可开启。
+PRELOAD_MODELS = os.getenv("IMAGE_EDIT_PRELOAD_MODELS", "false").lower() in ("1", "true", "yes")
+
+# 预加载所用的默认模型配置（可按需修改或通过环境变量覆盖）
+DEFAULT_MODEL_CONFIG = {
+    # KAIR - SCUNet 去噪
+    "scunet_model_name": os.getenv("SCUNET_MODEL_NAME", "scunet_color_real_psnr"),
+    # KAIR - BSRGAN 超分
+    "bsrgan_model_name": os.getenv("BSRGAN_MODEL_NAME", "BSRGAN"),
+    # DDColor 上色
+    "ddcolor_model_path": os.getenv("DDCOLOR_MODEL_PATH", "DDColor/modelscope/damo/cv_ddcolor_image-colorization/pytorch_model.pt"),
+    "ddcolor_input_size": int(os.getenv("DDCOLOR_INPUT_SIZE", "512")),
+    "ddcolor_model_size": os.getenv("DDCOLOR_MODEL_SIZE", "large"),
+}
+
 def get_mode():
     """获取当前运行模式"""
     return MODE
@@ -56,3 +71,11 @@ def get_coordinator_source():
         return HTTP_CONFIG["COORDINATOR_URL"]
     else:
         return STDOUT_CONFIG["COORDINATOR_SCRIPT"]
+
+def get_preload_models() -> bool:
+    """是否在服务启动时预加载模型"""
+    return PRELOAD_MODELS
+
+def get_default_model_config() -> dict:
+    """获取默认的模型配置（用于预加载）"""
+    return DEFAULT_MODEL_CONFIG.copy()

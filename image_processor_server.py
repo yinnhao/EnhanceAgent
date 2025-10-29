@@ -7,10 +7,15 @@ import io
 import os
 from PIL import Image
 from fastmcp import FastMCP
-from config import get_mode
+from config import get_mode, get_preload_models, get_default_model_config
 
 # 创建图像处理MCP服务器
 mcp = FastMCP("图像处理工具服务器")
+
+# 全局模型/管线缓存（按权重路径和关键参数区分）
+_scunet_cache = {}
+_bsrgan_cache = {}
+_ddcolor_cache = {}
 
 def image_from_base64(base64_str: str) -> Image.Image:
     """从base64字符串创建PIL图像对象"""
@@ -280,16 +285,20 @@ def denoise_scunet(image_base64: str, model_name: str = "scunet_color_real_psnr"
         arr = np.array(img)  # HWC, uint8
         x = torch.from_numpy(arr).permute(2,0,1).unsqueeze(0).float().div(255.0).to(device)
 
-        # 加载模型
-        model = net(in_nc=3, config=[4,4,4,4,4,4,4], dim=64)
+        # 加载模型（带缓存）
         weights_root = model_zoo or os.path.join(kair_root, "model_zoo")
         weight_path = os.path.join(weights_root, f"{model_name}.pth")
-        state = torch.load(weight_path, map_location=device)
-        model.load_state_dict(state, strict=True)
-        model.eval()
-        for p in model.parameters():
-            p.requires_grad = False
-        model = model.to(device)
+        cache_key = (weight_path, str(device))
+        model = _scunet_cache.get(cache_key)
+        if model is None:
+            model = net(in_nc=3, config=[4,4,4,4,4,4,4], dim=64)
+            state = torch.load(weight_path, map_location=device)
+            model.load_state_dict(state, strict=True)
+            model.eval()
+            for p in model.parameters():
+                p.requires_grad = False
+            model = model.to(device)
+            _scunet_cache[cache_key] = model
 
         with torch.no_grad():
             y = model(x)
@@ -333,16 +342,20 @@ def super_resolution_bsrgan(image_base64: str, model_name: str = "BSRGAN", model
         arr = np.array(img)
         x = torch.from_numpy(arr).permute(2,0,1).unsqueeze(0).float().div(255.0).to(device)
 
-        # 加载模型
-        model = net(in_nc=3, out_nc=3, nf=64, nb=23, gc=32, sf=sf)
+        # 加载模型（带缓存）
         weights_root = model_zoo or os.path.join(kair_root, "model_zoo")
         weight_path = os.path.join(weights_root, f"{model_name}.pth")
-        state = torch.load(weight_path, map_location=device)
-        model.load_state_dict(state, strict=True)
-        model.eval()
-        for p in model.parameters():
-            p.requires_grad = False
-        model = model.to(device)
+        cache_key = (weight_path, str(device), sf)
+        model = _bsrgan_cache.get(cache_key)
+        if model is None:
+            model = net(in_nc=3, out_nc=3, nf=64, nb=23, gc=32, sf=sf)
+            state = torch.load(weight_path, map_location=device)
+            model.load_state_dict(state, strict=True)
+            model.eval()
+            for p in model.parameters():
+                p.requires_grad = False
+            model = model.to(device)
+            _bsrgan_cache[cache_key] = model
 
         with torch.no_grad():
             y = model(x)
@@ -355,6 +368,25 @@ def super_resolution_bsrgan(image_base64: str, model_name: str = "BSRGAN", model
 
 if __name__ == "__main__":
     print("启动图像处理工具服务器...")
+    # 可选预加载模型以加速首调用
+    try:
+        if get_preload_models():
+            from PIL import Image as _Img
+            dummy = image_to_base64(_Img.new('RGB', (8,8), (0,0,0)))
+            try:
+                _ = denoise_scunet(dummy)
+            except Exception:
+                pass
+            try:
+                _ = super_resolution_bsrgan(dummy)
+            except Exception:
+                pass
+            try:
+                _ = colorize_ddcolor(dummy)
+            except Exception:
+                pass
+    except Exception:
+        pass
     if get_mode() == "http":
         mcp.run(
             transport="http",
