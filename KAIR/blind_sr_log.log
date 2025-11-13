@@ -1,0 +1,22 @@
+25-09-30 15:18:56.336 :       Model Name : BSRGAN
+25-09-30 15:18:56.384 :           GPU ID : 0
+25-09-30 15:18:58.684 :       Input Path : testsets/RealSRSet
+25-09-30 15:18:58.685 :      Output Path : testsets/RealSRSet_results_x4
+25-09-30 15:19:41.344 :       Model Name : BSRGAN
+25-09-30 15:19:41.390 :           GPU ID : 0
+25-09-30 15:19:43.838 :       Input Path : testsets/set5
+25-09-30 15:19:43.838 :      Output Path : testsets/set5_results_x4
+25-09-30 15:19:43.838 : ---1 --> BSRGAN --> x4--> baby.bmp
+25-09-30 15:19:47.400 : ---2 --> BSRGAN --> x4--> bird.bmp
+25-09-30 15:19:47.639 : ---3 --> BSRGAN --> x4--> butterfly.bmp
+25-09-30 15:19:47.826 : ---4 --> BSRGAN --> x4--> head.bmp
+25-09-30 15:19:48.032 : ---5 --> BSRGAN --> x4--> woman.bmp
+25-10-11 17:25:39.371 :       Model Name : BSRGAN
+25-10-11 17:25:39.417 :           GPU ID : 0
+25-10-11 17:25:41.733 :       Input Path : testsets/set5
+25-10-11 17:25:41.733 :      Output Path : testsets/set5_results_x4
+25-10-11 17:25:41.733 : ---1 --> BSRGAN --> x4--> baby.bmp
+25-10-11 17:25:45.495 : ---2 --> BSRGAN --> x4--> bird.bmp
+25-10-11 17:25:45.735 : ---3 --> BSRGAN --> x4--> butterfly.bmp
+25-10-11 17:25:45.923 : ---4 --> BSRGAN --> x4--> head.bmp
+25-10-11 17:25:46.142 : ---5 --> BSRGAN --> x4--> woman.bmp
